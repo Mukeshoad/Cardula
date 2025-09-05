@@ -1,0 +1,148 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  projects  Project[]
+  settings  UserSettings?
+  domains   Domain[]
+
+  @@map("users")
+}
+
+model UserSettings {
+  id               String  @id @default(cuid())
+  userId           String  @unique
+  autoSlideNav     Boolean @default(false)
+  theme            String  @default("light")
+  emailNotifications Boolean @default(true)
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String?
+  content     Json     @default("[]") // Array of blocks
+  styles      Json     @default("{}") // Global styles
+  seoTitle    String?
+  seoDescription String?
+  favicon     String?
+  customCss   String?
+  isPublished Boolean  @default(false)
+  publishedAt DateTime?
+  publishedUrl String?
+  templateId  String?
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template Template? @relation(fields: [templateId], references: [id])
+  jobs     Job[]
+
+  @@map("projects")
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  thumbnail   String
+  content     Json     @default("[]") // Array of blocks
+  styles      Json     @default("{}") // Global styles
+  tags        String[] @default([])
+  category    String   @default("general")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  projects Project[]
+
+  @@map("templates")
+}
+
+model Domain {
+  id           String      @id @default(cuid())
+  domain       String      @unique
+  projectId    String?
+  userId       String
+  status       DomainStatus @default(PENDING)
+  verificationToken String?
+  sslStatus    SSLStatus   @default(PENDING)
+  dnsRecords   Json        @default("[]")
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("domains")
+}
+
+model Job {
+  id        String    @id @default(cuid())
+  type      JobType
+  status    JobStatus @default(PENDING)
+  data      Json      @default("{}")
+  result    Json?
+  error     String?
+  projectId String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  completedAt DateTime?
+
+  // Relations
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("jobs")
+}
+
+enum DomainStatus {
+  PENDING
+  VERIFIED
+  FAILED
+}
+
+enum SSLStatus {
+  PENDING
+  PROVISIONED
+  FAILED
+}
+
+enum JobType {
+  PUBLISH_SITE
+  GENERATE_THUMBNAIL
+  OPTIMIZE_IMAGES
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
