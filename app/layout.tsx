@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Inter, Roboto_Mono } from "next/font/google"
 import "./globals.css"
 
+// Inter font
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
@@ -10,6 +11,7 @@ const inter = Inter({
   weight: ["400", "500", "600", "700"],
 })
 
+// Roboto Mono font
 const robotoMono = Roboto_Mono({
   subsets: ["latin"],
   display: "swap",
@@ -30,7 +32,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${robotoMono.variable} antialiased`}>
-      <body>{children}</body>
+      <body className={`${inter.className}`}>{children}</body>
     </html>
   )
 }
